@@ -2,8 +2,12 @@
 """运行时探针：在真实浏览器 DOM 中确认说明块位于清单末尾，且滚到清单底部可见。"""
 import os, re, json, subprocess, sys
 
-ROOT = r"E:\children‘s day file\开封美食地图"
-CHROME = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CHROME = next((p for p in [
+    os.path.expandvars(r"%ProgramFiles%\Google\Chrome\Application\chrome.exe"),
+    os.path.expandvars(r"%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe"),
+    os.path.expandvars(r"%LocalAppData%\Google\Chrome\Application\chrome.exe"),
+] if os.path.exists(p)), "chrome")
 
 PROBE = """
 <script>

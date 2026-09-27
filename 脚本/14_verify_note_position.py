@@ -2,7 +2,7 @@
 """回归校验：① 说明块确已移到清单末尾；② 文案零丢失（新旧 <li> 集合一致）。"""
 import os, re, html as _h
 
-ROOT = r"E:\children‘s day file\开封美食地图"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 NEW = os.path.join(ROOT, "开封美食地图.html")
 OLD = os.path.join(ROOT, "开封美食地图.before_notemove.bak.html")
 

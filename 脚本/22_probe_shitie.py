@@ -25,8 +25,12 @@
 """
 import os, sys, subprocess, json, shutil
 
-ROOT = r"E:\children‘s day file\开封美食地图"
-CHROME = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CHROME = next((p for p in [
+    os.path.expandvars(r"%ProgramFiles%\Google\Chrome\Application\chrome.exe"),
+    os.path.expandvars(r"%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe"),
+    os.path.expandvars(r"%LocalAppData%\Google\Chrome\Application\chrome.exe"),
+] if os.path.exists(p)), "chrome")
 SRC = os.path.join(ROOT, "汴京食帖.html")
 TMP = os.path.join(ROOT, "_probe_shitie.html")
 

@@ -12,7 +12,7 @@
 """
 import json, os, io
 
-ROOT = r"E:\children‘s day file\开封美食地图"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "data.json")
 OUT = os.path.join(ROOT, "汴京食帖.html")
 

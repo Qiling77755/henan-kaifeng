@@ -3,9 +3,11 @@
 import os, shutil
 from PIL import Image
 
-CLIP = r"C:\Users\17225\.workbuddy\clipboard-images"
-GOOGLE = r"E:\Google download"
-ROOT = r"E:\children‘s day file\开封美食地图"
+CLIP = (os.environ.get("KAIFENG_CLIP_DIR")
+        or os.path.join(os.path.expanduser("~"), "clipboard-images"))
+GOOGLE = (os.environ.get("KAIFENG_GOOGLE_DIR")
+          or os.path.join(os.path.expanduser("~"), "Downloads"))
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "图片素材", "原图")
 ZOOM = os.path.join(ROOT, "图片素材", "放大")
 os.makedirs(SRC, exist_ok=True)

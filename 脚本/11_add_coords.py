@@ -6,7 +6,7 @@
 """
 import json, os, shutil
 
-ROOT = r"E:\children‘s day file\开封美食地图"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 P = os.path.join(ROOT, "data.json")
 shutil.copy(P, os.path.join(ROOT, "data.before_coords.bak.json"))
 data = json.load(open(P, encoding="utf-8"))

@@ -2,8 +2,12 @@
 """视觉确认：自动打开第一条详情，截图检查 ✕ 关闭按钮的排版（1440 / 430 两档）。"""
 import os, subprocess
 
-ROOT = r"E:\children‘s day file\开封美食地图"
-CHROME = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CHROME = next((p for p in [
+    os.path.expandvars(r"%ProgramFiles%\Google\Chrome\Application\chrome.exe"),
+    os.path.expandvars(r"%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe"),
+    os.path.expandvars(r"%LocalAppData%\Google\Chrome\Application\chrome.exe"),
+] if os.path.exists(p)), "chrome")
 
 PROBE = """
 <script>

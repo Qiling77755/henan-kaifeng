@@ -2,7 +2,7 @@
 """按逐图核对结果，修正并补充 data.json。"""
 import json, os, re
 
-ROOT = r"E:\children‘s day file\开封美食地图"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 P = os.path.join(ROOT, "data.json")
 d = json.load(open(P, encoding="utf-8"))
 

@@ -2,7 +2,7 @@
 """数据去重：合并同一实体的重复录入条目。原文件备份为 data.raw.bak.json。"""
 import json, os, shutil, collections
 
-ROOT = r"E:\children‘s day file\开封美食地图"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "data.json")
 BAK = os.path.join(ROOT, "data.raw.bak.json")
 

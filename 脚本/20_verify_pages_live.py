@@ -11,7 +11,7 @@
 import os, re, json, time, subprocess, urllib.request, urllib.error
 from urllib.parse import quote
 
-ROOT = r"E:\children‘s day file"
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 REPO = "Qiling77755/henan-kaifeng"
 URL = "https://qiling77755.github.io/henan-kaifeng/"
 

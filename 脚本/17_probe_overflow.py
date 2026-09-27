@@ -2,8 +2,12 @@
 """横向溢出对比：新 HTML（含复制按钮）vs 备份 HTML（无按钮），定位是否有元素被撑出视口。"""
 import os, re, json, subprocess
 
-ROOT = r"E:\children‘s day file\开封美食地图"
-CHROME = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CHROME = next((p for p in [
+    os.path.expandvars(r"%ProgramFiles%\Google\Chrome\Application\chrome.exe"),
+    os.path.expandvars(r"%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe"),
+    os.path.expandvars(r"%LocalAppData%\Google\Chrome\Application\chrome.exe"),
+] if os.path.exists(p)), "chrome")
 
 PROBE = """
 <script>

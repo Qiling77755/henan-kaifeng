@@ -3,7 +3,7 @@
 import os
 from PIL import Image
 
-ROOT = r"E:\children‘s day file\开封美食地图"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "图片素材", "原图")
 ZOOM = os.path.join(ROOT, "图片素材", "放大")
 os.makedirs(ZOOM, exist_ok=True)

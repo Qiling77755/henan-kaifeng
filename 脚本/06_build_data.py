@@ -2,7 +2,7 @@
 """生成《开封美食地图》交互页面数据 + HTML。"""
 import json, os
 
-ROOT = r"E:\children‘s day file\开封美食地图"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # 名称, 类型, 区域, lat, lng, 地址, 推荐/备注, 来源图, 补充
 S = [

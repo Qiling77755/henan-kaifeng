@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 """校验「一键复制」：mock 隔离两条分支（同步成功 / 失败兜底），不依赖 headless 剪贴板行为。"""
-import os, re, json, subprocess
+import os, re, json, subprocess, shutil
 
-ROOT = r"E:\children‘s day file\开封美食地图"
-CHROME = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
-NODE   = r"C:\Users\17225\.workbuddy\binaries\node\versions\22.12.0\node.exe"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CHROME = next((p for p in [
+    os.path.expandvars(r"%ProgramFiles%\Google\Chrome\Application\chrome.exe"),
+    os.path.expandvars(r"%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe"),
+    os.path.expandvars(r"%LocalAppData%\Google\Chrome\Application\chrome.exe"),
+] if os.path.exists(p)), "chrome")
+NODE   = os.environ.get("NODE_BIN") or shutil.which("node") or "node"
 HTML   = os.path.join(ROOT, "开封美食地图.html")
 
 src = open(HTML, encoding="utf-8").read()

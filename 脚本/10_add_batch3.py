@@ -2,7 +2,7 @@
 """第三批：补录逐图核对发现的新条目 + 补充既有条目备注。"""
 import json, os, shutil
 
-ROOT = r"E:\children‘s day file\开封美食地图"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "data.json")
 BAK = os.path.join(ROOT, "data.before_batch3.bak.json")
 if not os.path.exists(BAK):

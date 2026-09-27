@@ -2,7 +2,7 @@
 """生成交互式 HTML 页面（数据内联，零外部依赖）。"""
 import json, os
 
-ROOT = r"E:\children‘s day file\开封美食地图"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 with open(os.path.join(ROOT, "data.json"), encoding="utf-8") as f:
     spots = json.load(f)
 
