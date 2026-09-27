@@ -731,6 +731,11 @@ main{flex:1 1 auto;min-height:0;display:block}
 .detail::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15);border-radius:4px}
 .detail.flash{border-color:#b5443a;box-shadow:0 0 0 3px rgba(181,68,58,.14),0 3px 16px rgba(0,0,0,.06)}
 .detail h3{font-size:15px;margin-bottom:8px}
+/* 详情头部：标题 + 关闭按钮（与「再次点击该地点」互为补充的显式关闭入口） */
+.dhead{display:flex;align-items:flex-start;gap:8px}
+.dhead h3{flex:1;min-width:0;margin-bottom:8px}
+.dhead .dx{flex:0 0 auto;width:24px;height:24px;padding:0;line-height:1;border:1px solid rgba(0,0,0,.14);background:#fff;color:#6b6560;border-radius:8px;cursor:pointer;font-size:13px;font-family:inherit}
+.dhead .dx:hover{background:#f2efec;color:#22201d;border-color:rgba(0,0,0,.26)}
 /* 详情面板复制按钮组 */
 .cps{display:flex;gap:6px;flex-wrap:wrap;margin:-2px 0 9px}
 .cp2{font-size:11.5px;padding:4px 10px;border-radius:7px;border:1px solid rgba(0,0,0,.14);background:#fff;color:#4a4642;cursor:pointer;font-family:inherit}
@@ -902,6 +907,8 @@ const cOf = t => TYPE_COLOR[t] || "#7f8c8d";
 const SORTS = ["街区顺序"];
 const el = id => document.getElementById(id);
 let myPos = null, myPosBase = null, current = null, filtered = SPOTS.slice();
+/* 详情面板的初始占位内容：取消选中时原样还原（脚本位于 body 末尾，#detail 必然已存在） */
+const DETAIL_HOME = el("detail") ? el("detail").innerHTML : "";
 
 /* ---------- 地图投影（无需，改用 Leaflet 真实瓦片） ---------- */
 
@@ -931,6 +938,9 @@ function initMap(){
   tiles.on("tileerror", ()=>{ if(!okOnce) el("mapfail").classList.add("on"); });
   tiles.addTo(MAP);
   MLYR = L.layerGroup().addTo(MAP);
+  /* 点击地图空白处关闭详情。Leaflet 的 _findEventTargets 对 click/preclick 会先查 _draggableMoved()，
+     拖动地图后不会触发 click；圆点点击已 stopPropagation，故此处只会在「真·点空白」时触发。 */
+  MAP.on("click", ()=>{ if(current) deselect(); });
   setTimeout(()=>{ if(!okOnce) el("mapfail").classList.add("on"); MAP.invalidateSize(); }, 3500);
   window.addEventListener("resize", ()=>{ try{ MAP.invalidateSize(); }catch(_){} });
 }
@@ -965,7 +975,8 @@ function renderMap(sel){
       });
     }
     mk.bindTooltip((isHotel?"★ 本次住宿 · ":"") + s.n + (approx?" （区域近似）":""), {direction:"top", offset:[0,-6]});
-    mk.on("click", ev=>{ L.DomEvent.stopPropagation(ev); select(s.id, true); });
+    /* 再次点击同一个点 = 取消选中，让「打开 / 关闭」逻辑闭环 */
+    mk.on("click", ev=>{ L.DomEvent.stopPropagation(ev); toggleSpot(s.id, true); });
     mk.addTo(MLYR);
   });
   if(!FITTED && pts.length){
@@ -1032,7 +1043,7 @@ function renderList(){
     n.addEventListener("click",e=>{
       /* 若指针位移>4px，视为「拖选文字」，不触发卡片选中（方便手动复制文本） */
       if(Math.abs(e.clientX-dx)>4||Math.abs(e.clientY-dy)>4) return;
-      select(id,false);
+      toggleSpot(id,false);
     });
     const cp=n.querySelector(".cp");
     if(cp) cp.addEventListener("click",e=>{ e.stopPropagation(); e.preventDefault(); copySpot(id,false); });
@@ -1053,6 +1064,21 @@ function renderList(){
     + `<span style="margin-left:6px;color:#e11d48"><svg width="11" height="11" viewBox="0 0 24 24" style="vertical-align:-1px"><polygon points="12,1.6 14.9,8.7 22.6,9.3 16.8,14.4 18.5,21.9 12,17.9 5.5,21.9 7.2,14.4 1.4,9.3 9.1,8.7" fill="#e11d48" stroke="#fff" stroke-width="1.9" stroke-linejoin="round"/></svg>本次住宿</span>`;
 }
 
+/* ---------- 选中 / 取消选中 ---------- */
+/* 同一个条目再点一次即关闭 —— 地图圆点与清单卡片共用同一套开关逻辑，保证「打开/关闭」闭环 */
+function toggleSpot(id, fromMap){
+  if(current && current.id===id){ deselect(); return; }
+  select(id, fromMap);
+}
+/* 关闭详情：清空选中 → 面板还原初始占位态 → 地图大点与清单高亮随 renderMap(null) 复位。
+   注意不触碰 FITTED，地图视野保持用户当前位置，不跳回初始范围。 */
+function deselect(){
+  current = null;
+  const d = el("detail");
+  if(d){ d.innerHTML = DETAIL_HOME; d.classList.remove("flash"); }
+  renderList(); renderMap(null);
+}
+
 /* ---------- 选中 ---------- */
 function select(id, fromMap){
   current = SPOTS.find(s=>s.id===id);
@@ -1069,7 +1095,7 @@ function select(id, fromMap){
     const shot = current.img
       ? `<div class="shot"><img src="${current.img}" alt="来源截图" loading="lazy"><div class="shot-cap">来源截图：${current.src||"—"}（点击可放大核对）</div></div>`
       : "";
-    el("detail").innerHTML = `<h3>${current.n}</h3>
+    el("detail").innerHTML = `<div class="dhead"><h3>${current.n}</h3><button class="dx" id="dclose" title="关闭详情（也可再次点击该地点，或点地图空白处）" aria-label="关闭详情">✕</button></div>
       <div class="cps"><button class="cp2" data-kind="name">📋 复制店名</button><button class="cp2" data-kind="full">📋 复制名称 + 地址</button></div>
       <div class="kv">类型：${current.ty} ｜ 区域：${current.ar}</div>
       ${current.star?'<div class="kv" style="color:#e11d48">★ <b>本次行程住宿</b>（地图上唯一的红色五角星标记）</div>':""}
@@ -1086,6 +1112,8 @@ function select(id, fromMap){
     el("detail").querySelectorAll(".cp2").forEach(b=>b.addEventListener("click",e=>{
       e.preventDefault(); e.stopPropagation(); copySpot(current.id, b.dataset.kind==="full");
     }));
+    const dc = el("dclose");
+    if(dc) dc.addEventListener("click", e=>{ e.preventDefault(); e.stopPropagation(); deselect(); });
     if(!fromMap){
       /* 在清单里点选：若该卡片不在滚动区视野内，就把它滚到中间 */
       scrollCardIntoPane(document.querySelector(`.card[data-id="${id}"]`));
@@ -1248,7 +1276,11 @@ document.addEventListener("click",e=>{
   if(img){ el("lbimg").src=img.src; el("lb").classList.add("on"); return; }
   if(e.target.id==="lb") e.target.classList.remove("on");
 });
-document.addEventListener("keydown",e=>{ if(e.key==="Escape") el("lb").classList.remove("on"); });
+document.addEventListener("keydown",e=>{
+  if(e.key!=="Escape") return;
+  if(el("lb").classList.contains("on")){ el("lb").classList.remove("on"); return; }  /* 大图优先关闭 */
+  if(current) deselect();
+});
 </script>
 <div class="toast" id="toast"></div>
 <div class="lb" id="lb"><img id="lbimg" alt="来源截图"></div>
