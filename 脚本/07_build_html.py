@@ -65,6 +65,11 @@ main{flex:1 1 auto;min-height:0;display:block}
 .approx{font-size:11.5px;color:#8a6d3b;background:rgba(214,158,46,.13);padding:2px 8px;border-radius:20px;white-space:nowrap}
 .mapbox{background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:14px;padding:12px;box-shadow:0 3px 16px rgba(0,0,0,.05)}
 .map-main{position:relative;height:100%;min-height:0;display:flex;flex-direction:column}
+/* 地图折叠把手：所有尺寸可用。收起后 #map/图例/提示一并隐藏，把空间让给清单 */
+.mapbar{display:flex;width:100%;align-items:center;justify-content:space-between;gap:10px;padding:1px 2px 10px;border:0;border-bottom:1px solid rgba(0,0,0,.08);border-radius:0;background:transparent;font-family:inherit;font-size:13.5px;color:#22201d;cursor:pointer;text-align:left}
+.mapbar:hover .mp-a{color:#9c382f;text-decoration:underline}
+.mapbar .mp-t{font-weight:600;white-space:nowrap}
+.mapbar .mp-a{font-weight:600;font-size:12.5px;color:#b5443a;white-space:nowrap}
 #map{width:100%;flex:1 1 auto;height:auto;min-height:260px;border-radius:10px;background:#e9e5df;border:1px solid rgba(0,0,0,.08);z-index:1}
 .leaflet-container{font-family:inherit;font-size:12.5px}
 .leaflet-popup-content{margin:9px 12px;font-size:13px;line-height:1.6}
@@ -116,6 +121,19 @@ details.note li{margin:3px 0}
 .toast .acts button{font-size:12.2px;padding:7px 12px;border-radius:8px;border:1px solid rgba(0,0,0,.14);background:#fff;cursor:pointer;font-family:inherit;color:#22201d}
 .toast .acts button.p{background:#b5443a;color:#fff;border-color:#b5443a}
 .toast.ok{border-left-color:#2f7d63}
+/* 折叠态：地图、图例、提示、加载失败提示一并隐藏，只留把手。
+   放在基础样式末尾（而非某个媒体查询内），因为折叠对所有尺寸开放；
+   且需晚于 .mapfail.on 出现，平级特异性时才能压住它。 */
+.map-main.collapsed #map,
+.map-main.collapsed .legend,
+.map-main.collapsed .hint,
+.map-main.collapsed .mapfail{display:none}
+.map-main.collapsed .mapbar{border-bottom:0;padding:9px 2px}
+/* 宽屏折叠：地图收起后改成单列，清单占满整行（限宽 980px，避免行太长影响阅读） */
+@media(min-width:1081px){
+  .grid2.mapcollapsed{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr)}
+  .grid2.mapcollapsed>aside{max-width:980px}
+}
 @media(max-width:1080px){
   .wrap{height:100dvh;min-height:100vh;padding:10px 10px 8px}
   .sub{display:none}
@@ -185,7 +203,11 @@ details.note li{margin:3px 0}
 
 <main>
   <div class="grid2">
-    <div class="mapbox map-main">
+    <div class="mapbox map-main" id="mapbox">
+      <button class="mapbar" id="mapToggle" type="button" aria-expanded="true" aria-controls="map">
+        <span class="mp-t">🗺️ 地图</span>
+        <span class="mp-a" id="mpArrow">收起 ▲</span>
+      </button>
       <div id="map"></div>
       <div class="mapfail" id="mapfail">⚠️ 底图瓦片加载失败。真实地图需要联网（瓦片来自高德）。请检查网络后刷新；<b>圆点与店铺数据不受影响</b>，仍可在下方列表查看全部条目。</div>
       <div class="legend" id="legend"></div>
@@ -285,6 +307,30 @@ function initMap(){
   MAP.on("click", ()=>{ if(current) deselect(); });
   setTimeout(()=>{ if(!okOnce) el("mapfail").classList.add("on"); MAP.invalidateSize(); }, 3500);
   window.addEventListener("resize", ()=>{ try{ MAP.invalidateSize(); }catch(_){} });
+}
+/* ---------- 地图折叠（窄屏）：收起地图，把高度让给下方清单 ----------
+   坑：容器由 display:none 恢复时尺寸是从 0 变回来的，Leaflet 不会自己察觉
+   （它只监听 window resize），必须手动 invalidateSize()，否则展开后瓦片错位/只显示灰块。 */
+function setMapCollapsed(v){
+  const box = document.querySelector(".map-main");
+  if(!box) return;
+  box.classList.toggle("collapsed", v);
+  /* 宽屏折叠后让清单占满整行：状态同步到 .grid2（样式见 min-width:1081px 媒体查询） */
+  const g = document.querySelector(".grid2");
+  if(g) g.classList.toggle("mapcollapsed", v);
+  const btn = el("mapToggle");
+  if(btn) btn.setAttribute("aria-expanded", v ? "false" : "true");
+  const ar = el("mpArrow");
+  if(ar) ar.textContent = v ? "展开 ▼" : "收起 ▲";
+  if(!v){
+    const fix = ()=>{ try{ if(MAP) MAP.invalidateSize(); }catch(_){} };
+    requestAnimationFrame(fix);          /* 布局生效后立刻重算 */
+    setTimeout(fix, 120);                /* 兜底：极端情况下 rAF 早于样式生效 */
+  }
+}
+function toggleMapCollapsed(){
+  const box = document.querySelector(".map-main");
+  if(box) setMapCollapsed(!box.classList.contains("collapsed"));
 }
 /* 红色五角星：仅用于本次住宿（唯一星标） */
 function starIcon(sel){
@@ -440,8 +486,8 @@ function select(id, fromMap){
     el("detail").innerHTML = `<div class="dhead"><h3>${current.n}</h3><button class="dx" id="dclose" title="关闭详情（也可再次点击该地点，或点地图空白处）" aria-label="关闭详情">✕</button></div>
       <div class="cps"><button class="cp2" data-kind="name">📋 复制店名</button><button class="cp2" data-kind="full">📋 复制名称 + 地址</button></div>
       <div class="kv">类型：${current.ty} ｜ 区域：${current.ar}</div>
-      ${current.star?'<div class="kv" style="color:#e11d48">★ <b>本次行程住宿</b>（地图上唯一的红色五角星标记）</div>':""}
-      ${current.offmap?'<div class="kv" style="color:#8a6d3b">ℹ️ <b>不在地图标注</b>：该处为推荐列表中提及的其他酒店，非本次行程住宿，故地图上不出点；数据与来源截图仍保留，便于回溯。</div>':""}
+      ${current.star?'<div class="kv" style="color:#e11d48">★ <b>本次行程住处</b>（地图上唯一的红色五角星标记）</div>':""}
+      ${current.offmap?'<div class="kv" style="color:#8a6d3b">ℹ️ <b>不在地图标注</b>：该处为推荐列表中提及的其他酒店，非本次行程住处，故地图上不出点；数据与来源截图仍保留，便于回溯。</div>':""}
       ${current.loc==="approx"?'<div class="kv" style="color:#8a6d3b">⚠️ <b>区域近似</b>：该店在地图上无独立 POI（多为夜市/园内摊位），坐标按所属区域大致标注，供规划动线参考，<b>到店前请以实际为准</b>。</div>':""}
       ${shot}
       <div class="kv">地址：${current.ad||"—"}</div>
@@ -611,6 +657,7 @@ el("toHotel").addEventListener("click",useHotel);
 });
 
 buildFilters(); renderList(); initMap(); renderMap(null);
+el("mapToggle").addEventListener("click", toggleMapCollapsed);
 
 /* ---------- 来源截图放大预览 ---------- */
 document.addEventListener("click",e=>{

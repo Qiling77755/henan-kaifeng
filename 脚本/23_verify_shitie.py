@@ -361,7 +361,7 @@ if __name__ == "__main__":
 
     print("C. 墨色闸门（确址/约略/未标）")
     # 期望值从 data.json 现推，不硬编码 —— 硬编码会让核验与页面口径各自漂移而无人察觉。
-    # 星标住处没有 loc 字段，但坐标是柒总给的到门牌实址，归确址（同构建脚本 INK_OF）。
+    # 星标住处没有 loc 字段，但坐标是行程主人提供的实址，归确址（同构建脚本 INK_OF）。
     def ink_of(x):
         if x.get("star"): return 1
         return 1 if x.get("loc") == "exact" else (2 if x.get("loc") == "approx" else 3)
